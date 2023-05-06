@@ -12,11 +12,14 @@ import java.net.Socket;
 
 public class Main {
     private static final int PORT = 8989;
-    private static final String CATEGORIES_FILE = "categories.tsv";
-    private static final String OTHER_CATEGORY = "другое";
+    static final String CATEGORIES_FILE = "categories.tsv";
+    static final String OTHER_CATEGORY = "другое";
 
     public static void main(String[] args) {
-        CategoryManager categoryManager = new CategoryManager(CATEGORIES_FILE, OTHER_CATEGORY);
+        CategoryManager categoryManager = CategoryManager.loadData();
+        if (categoryManager == null) {
+            categoryManager = new CategoryManager(CATEGORIES_FILE, OTHER_CATEGORY);
+        }
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Сервер запущен на порту " + PORT);
             ObjectMapper mapper = new ObjectMapper();
@@ -56,6 +59,8 @@ public class Main {
                         maxCategoryObject.addProperty("sum", maxSum);
                         result.add("maxCategory", maxCategoryObject);
 
+                        categoryManager.saveData();
+
                         out.println("HTTP/1.1 200 OK");
                         out.println("Content-Type: application/json");
                         out.println();
@@ -64,8 +69,7 @@ public class Main {
                         System.out.println("Отправлен ответ: " + result);
                         System.out.println();
                     }
-
-
+                    categoryManager.saveData();
                 } catch (IOException e) {
                     System.out.println("Ошибка при обработке подключения");
                     e.printStackTrace();

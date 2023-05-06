@@ -1,12 +1,10 @@
 package ru.netology;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CategoryManager {
+public class CategoryManager implements Serializable {
     private final Map<String, String> categoryMap = new HashMap<>();
     private final Map<String, Double> expenseMap = new HashMap<>();
     private final String otherCategory;
@@ -25,6 +23,26 @@ public class CategoryManager {
             System.out.println("Ошибка при чтении файла категорий");
             e.printStackTrace();
         }
+    }
+
+    public void saveData() {
+        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("data.bin"))) {
+            outputStream.writeObject(this);
+        } catch (IOException e) {
+            System.out.println("Ошибка при сохранении данных в файл");
+            e.printStackTrace();
+        }
+    }
+
+    public static CategoryManager loadData() {
+        CategoryManager categoryManager = null;
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("data.bin"))) {
+            categoryManager = (CategoryManager) inputStream.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Ошибка при загрузке данных из файла");
+            e.printStackTrace();
+        }
+        return categoryManager;
     }
 
     public String getCategory(String title) {
@@ -69,3 +87,4 @@ public class CategoryManager {
         expenseMap.clear();
     }
 }
+
