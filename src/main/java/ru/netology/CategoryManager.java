@@ -7,9 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CategoryManager {
-    private Map<String, String> categoryMap = new HashMap<>();
-    private Map<String, Double> expenseMap = new HashMap<>();
-    private String otherCategory;
+    private final Map<String, String> categoryMap = new HashMap<>();
+    private final Map<String, Double> expenseMap = new HashMap<>();
+    private final String otherCategory;
 
     public CategoryManager(String categoriesFile, String otherCategory) {
         this.otherCategory = otherCategory;
@@ -42,6 +42,7 @@ public class CategoryManager {
         }
         expenseMap.put(category, currentSum + sum);
     }
+
     public String getMaxCategory() {
         String maxCategory = otherCategory;
         double maxSum = 0.0;
@@ -62,5 +63,9 @@ public class CategoryManager {
             }
         }
         return maxSum;
+    }
+
+    public void clearExpenses() {
+        expenseMap.clear();
     }
 }
