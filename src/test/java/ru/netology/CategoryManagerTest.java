@@ -3,7 +3,6 @@ package ru.netology;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Spy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -11,12 +10,13 @@ class CategoryManagerTest {
     private static final String CATEGORIES_FILE = "categories.tsv";
     private static final String OTHER_CATEGORY = "другое";
     private static final CategoryManager categoryManager = new CategoryManager(CATEGORIES_FILE, OTHER_CATEGORY);
+    private static final String date = "2022.02.08";
 
     @BeforeEach
     void setUp() {
-        categoryManager.addExpense("еда", 100);
-        categoryManager.addExpense("еда", 200);
-        categoryManager.addExpense("одежда", 400);
+        categoryManager.addExpense("еда", 100, date);
+        categoryManager.addExpense("еда", 200, date);
+        categoryManager.addExpense("одежда", 400, date);
     }
     @AfterEach
     void tearDown() {
@@ -32,7 +32,7 @@ class CategoryManagerTest {
 
     @org.junit.jupiter.api.Test
     void addExpense() {
-        categoryManager.addExpense("еда", 500);
+        categoryManager.addExpense("еда", 500, date);
         assertEquals(800, categoryManager.getMaxSum());
         assertEquals("еда", categoryManager.getMaxCategory());
     }
