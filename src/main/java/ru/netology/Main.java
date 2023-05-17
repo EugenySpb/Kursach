@@ -14,6 +14,8 @@ public class Main {
     private static final int PORT = 8989;
     static final String CATEGORIES_FILE = "categories.tsv";
     static final String OTHER_CATEGORY = "другое";
+    static final String SUM = "sum";
+    static final String CATEGORY = "category";
 
     public static void main(String[] args) {
         CategoryManager categoryManager = CategoryManager.loadData();
@@ -62,20 +64,20 @@ public class Main {
                         JsonObject maxMonthCategoryObject = new JsonObject();
                         JsonObject maxDayCategoryObject = new JsonObject();
 
-                        maxCategoryObject.addProperty("category", maxCategory);
-                        maxCategoryObject.addProperty("sum", maxSum);
+                        maxCategoryObject.addProperty(CATEGORY, maxCategory);
+                        maxCategoryObject.addProperty(SUM, maxSum);
                         result.add("maxCategory", maxCategoryObject);
 
-                        maxYearCategoryObject.addProperty("category", maxYearCategory.split(": ")[1]);
-                        maxYearCategoryObject.addProperty("sum", maxYearCategory.split(": ")[0]);
+                        maxYearCategoryObject.addProperty(CATEGORY, maxYearCategory.split(": ")[1]);
+                        maxYearCategoryObject.addProperty(SUM, maxYearCategory.split(": ")[0]);
                         result.add("maxYearCategory", maxYearCategoryObject);
 
-                        maxMonthCategoryObject.addProperty("category", maxMonthCategory.split(": ")[1]);
-                        maxMonthCategoryObject.addProperty("sum", maxMonthCategory.split(": ")[0]);
+                        maxMonthCategoryObject.addProperty(CATEGORY, maxMonthCategory.split(": ")[1]);
+                        maxMonthCategoryObject.addProperty(SUM, maxMonthCategory.split(": ")[0]);
                         result.add("maxMonthCategory", maxMonthCategoryObject);
 
-                        maxDayCategoryObject.addProperty("category", maxDayCategory.split(":" )[1]);
-                        maxDayCategoryObject.addProperty("sum", maxDayCategory.split(": ")[0]);
+                        maxDayCategoryObject.addProperty(CATEGORY, maxDayCategory.split(":" )[1]);
+                        maxDayCategoryObject.addProperty(SUM, maxDayCategory.split(": ")[0]);
                         result.add("maxDayCategory", maxDayCategoryObject);
 
                         categoryManager.saveData();
