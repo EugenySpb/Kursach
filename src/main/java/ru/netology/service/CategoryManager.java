@@ -1,4 +1,6 @@
-package ru.netology;
+package ru.netology.service;
+
+import ru.netology.model.ListOfCategories;
 
 import java.io.*;
 import java.time.LocalDate;
@@ -30,11 +32,12 @@ public class CategoryManager implements Serializable {
             // Файл не существует, создаем новый файл
             try {
                 FILE.createNewFile();
-                return new ListOfCategories();
+                ListOfCategories categories = new ListOfCategories();
+                loadCategory(categories);
+                return categories;
             } catch (IOException e) {
                 System.out.println("Ошибка при создании файла");
                 e.printStackTrace();
-                return null;
             }
         }
         ListOfCategories categories;
@@ -46,6 +49,11 @@ public class CategoryManager implements Serializable {
             e.printStackTrace();
             return null;
         }
+        loadCategory(categories);
+        return categories;
+    }
+
+    private static void loadCategory(ListOfCategories categories) {
         try (BufferedReader br = new BufferedReader(new FileReader(CATEGORIES_FILE))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -58,7 +66,6 @@ public class CategoryManager implements Serializable {
             System.out.println("Ошибка при чтении файла категорий");
             e.printStackTrace();
         }
-        return categories;
     }
 
     public String getCategory(String title, ListOfCategories categories) {

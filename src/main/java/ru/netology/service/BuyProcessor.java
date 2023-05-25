@@ -1,8 +1,10 @@
-package ru.netology;
+package ru.netology.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
+import ru.netology.model.Buy;
+import ru.netology.model.ListOfCategories;
 
 import java.io.PrintWriter;
 import java.io.Serializable;
@@ -19,10 +21,6 @@ public class BuyProcessor implements Serializable {
         if (categoryManager == null) {
             categoryManager = new CategoryManager();
             categories = categoryManager.loadData();
-            if (categories == null) {
-                categories = new ListOfCategories();
-            }
-            categoryManager.saveData(categories);
         }
 
         System.out.println("Получен запрос: " + requestBody);

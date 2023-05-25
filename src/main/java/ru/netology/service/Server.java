@@ -1,6 +1,4 @@
-package ru.netology;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+package ru.netology.service;
 
 import java.io.*;
 import java.net.ServerSocket;
