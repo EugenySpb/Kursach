@@ -10,7 +10,7 @@ public class Server implements Serializable {
     static BuyProcessor processor;
     public void start () {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Сервер запущен на порту " + PORT);
+            System.out.println("Server running on port " + PORT);
             while (true) {
                 try (Socket clientSocket = serverSocket.accept();
                      BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -36,13 +36,13 @@ public class Server implements Serializable {
                     }
 
                 } catch (IOException e) {
-                    System.out.println("Ошибка при обработке подключения");
+                    System.out.println("Connection processing error");
                     e.printStackTrace();
                 }
             }
         } catch (
                 IOException e) {
-            System.out.println("Не могу стартовать сервер");
+            System.out.println("Can't start server");
             e.printStackTrace();
         }
     }
