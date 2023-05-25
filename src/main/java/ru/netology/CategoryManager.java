@@ -4,17 +4,13 @@ import java.io.*;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.Map;
 
 public class CategoryManager implements Serializable {
     private static final long serialVersionUID = 1L;
-    private final Map<String, String> categoryMap = new HashMap<>();
-    private final Map<String, Double> expenseMap = new HashMap<>();
-    private final Map<String, Double> yearExpenseMap = new HashMap<>();
-    private final Map<String, Double> monthExpenseMap = new HashMap<>();
-    private final Map<String, Double> dayExpenseMap = new HashMap<>();
     private final String otherCategory;
+    public static File FILE = new File("data.bin");
+    protected ListOfCategories categories = new ListOfCategories();
 
     public CategoryManager(String categoriesFile, String otherCategory) {
         this.otherCategory = otherCategory;
@@ -23,7 +19,7 @@ public class CategoryManager implements Serializable {
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split("\t");
                 if (parts.length == 2) {
-                    categoryMap.put(parts[0], parts[1]);
+                    categories.getCategoryMap().put(parts[0], parts[1]);
                 }
             }
         } catch (IOException e) {
@@ -32,39 +28,52 @@ public class CategoryManager implements Serializable {
         }
     }
 
-    public void saveData() {
-        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("data.bin"))) {
-            outputStream.writeObject(this);
+    public void saveData(ListOfCategories categories) {
+        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(FILE))) {
+            outputStream.writeObject(categories);
+            System.out.println("Файл сохранен");
         } catch (IOException e) {
             System.out.println("Ошибка при сохранении данных в файл");
             e.printStackTrace();
         }
     }
 
-    public static CategoryManager loadData() {
-        CategoryManager categoryManager = null;
-        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("data.bin"))) {
-            categoryManager = (CategoryManager) inputStream.readObject();
+    public static ListOfCategories loadData() {
+        if (!FILE.exists()) {
+            // Файл не существует, создаем новый файл
+            try {
+                FILE.createNewFile();
+                return new ListOfCategories();
+            } catch (IOException e) {
+                System.out.println("Ошибка при создании файла");
+                e.printStackTrace();
+                return null;
+            }
+        }
+        ListOfCategories categories;
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(FILE))) {
+            categories = (ListOfCategories) inputStream.readObject();
             System.out.println("Данные из файла загружены");
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Ошибка при загрузке данных из файла");
             e.printStackTrace();
+            return null;
         }
-        return categoryManager;
+        return categories;
     }
 
     public String getCategory(String title) {
-        String category = categoryMap.get(title);
+        String category = categories.getCategoryMap().get(title);
         if (category == null) {
             category = otherCategory;
         }
         return category;
     }
 
-    public void addExpense(String category, double sum, String date) {
-        addCurrentExpense(category, sum, expenseMap, yearExpenseMap);
+    public void addExpense(String category, double sum, String date, ListOfCategories categories) {
+        addCurrentExpense(category, sum, this.categories.getExpenseMap(), this.categories.getYearExpenseMap());
 
-        addCurrentExpense(category, sum, monthExpenseMap, dayExpenseMap);
+        addCurrentExpense(category, sum, this.categories.getMonthExpenseMap(), this.categories.getDayExpenseMap());
 
         // Преобразование строки даты в объект LocalDate
         LocalDate expenseDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy.MM.dd"));
@@ -72,18 +81,18 @@ public class CategoryManager implements Serializable {
         // Обновление значения расходов по году
         YearMonth yearMonth = YearMonth.of(expenseDate.getYear(), expenseDate.getMonthValue());
         String yearKey = category + "-" + expenseDate.getYear();
-        double yearSum = yearExpenseMap.getOrDefault(yearKey, 0.0) + sum;
-        yearExpenseMap.put(yearKey, yearSum);
+        double yearSum = this.categories.getYearExpenseMap().getOrDefault(yearKey, 0.0) + sum;
+        this.categories.getYearExpenseMap().put(yearKey, yearSum);
 
         // Обновление значения расходов по месяцу
         String monthKey = category + "-" + yearMonth;
-        double monthSum = monthExpenseMap.getOrDefault(monthKey, 0.0) + sum;
-        monthExpenseMap.put(monthKey, monthSum);
+        double monthSum = this.categories.getMonthExpenseMap().getOrDefault(monthKey, 0.0) + sum;
+        this.categories.getMonthExpenseMap().put(monthKey, monthSum);
 
         // Обновление значения расходов по дню
         String dayKey = category + "-" + expenseDate;
-        double daySum = dayExpenseMap.getOrDefault(dayKey, 0.0) + sum;
-        dayExpenseMap.put(dayKey, daySum);
+        double daySum = this.categories.getDayExpenseMap().getOrDefault(dayKey, 0.0) + sum;
+        this.categories.getDayExpenseMap().put(dayKey, daySum);
     }
 
     private void addCurrentExpense(String category, double sum, Map<String, Double> expenseMap, Map<String, Double> yearExpenseMap) {
@@ -104,17 +113,17 @@ public class CategoryManager implements Serializable {
 
     public String getMaxYearCategory(String date) {
         int year = Integer.parseInt(date.split("\\.")[0]);
-        return getMaxCategoryByExpenseMap(yearExpenseMap, year);
+        return getMaxCategoryByExpenseMap(categories.getYearExpenseMap(), year);
     }
 
     public String getMaxMonthCategory(String date) {
         int month = Integer.parseInt(date.split("\\.")[1]);
-        return getMaxCategoryByExpenseMap(monthExpenseMap, month);
+        return getMaxCategoryByExpenseMap(categories.getMonthExpenseMap(), month);
     }
 
     public String getMaxDayCategory(String date) {
         int day = Integer.parseInt(date.split("\\.")[2]);
-        return getMaxCategoryByExpenseMap(dayExpenseMap, day);
+        return getMaxCategoryByExpenseMap(categories.getDayExpenseMap(), day);
     }
 
     private String getMaxCategoryByExpenseMap(Map<String, Double> expenseMap, int filter) {
@@ -143,7 +152,7 @@ public class CategoryManager implements Serializable {
     public String getMaxCategory() {
         String maxCategory = otherCategory;
         double maxSum = 0.0;
-        for (Map.Entry<String, Double> entry : expenseMap.entrySet()) {
+        for (Map.Entry<String, Double> entry : categories.getExpenseMap().entrySet()) {
             if (entry.getValue() > maxSum) {
                 maxCategory = entry.getKey();
                 maxSum = entry.getValue();
@@ -154,7 +163,7 @@ public class CategoryManager implements Serializable {
 
     public double getMaxSum() {
         double maxSum = 0.0;
-        for (Double value : expenseMap.values()) {
+        for (Double value : categories.getExpenseMap().values()) {
             if (value > maxSum) {
                 maxSum = value;
             }
@@ -163,7 +172,7 @@ public class CategoryManager implements Serializable {
     }
 
     public void clearExpenses() {
-        expenseMap.clear();
+        categories.getExpenseMap().clear();
     }
 }
 
