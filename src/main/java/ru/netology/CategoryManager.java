@@ -8,25 +8,12 @@ import java.util.Map;
 
 public class CategoryManager implements Serializable {
     private static final long serialVersionUID = 1L;
-    private final String otherCategory;
+    private final String OTHER_CATEGORY = "другое";
     public static File FILE = new File("data.bin");
-    protected ListOfCategories categories = new ListOfCategories();
+    static final String CATEGORIES_FILE = "categories.tsv";
 
-    public CategoryManager(String categoriesFile, String otherCategory) {
-        this.otherCategory = otherCategory;
-        try (BufferedReader br = new BufferedReader(new FileReader(categoriesFile))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split("\t");
-                if (parts.length == 2) {
-                    categories.getCategoryMap().put(parts[0], parts[1]);
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("Ошибка при чтении файла категорий");
-            e.printStackTrace();
-        }
-    }
+//    protected ListOfCategories categories = new ListOfCategories();
+
 
     public void saveData(ListOfCategories categories) {
         try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(FILE))) {
@@ -38,7 +25,7 @@ public class CategoryManager implements Serializable {
         }
     }
 
-    public static ListOfCategories loadData() {
+    public ListOfCategories loadData() {
         if (!FILE.exists()) {
             // Файл не существует, создаем новый файл
             try {
@@ -59,21 +46,33 @@ public class CategoryManager implements Serializable {
             e.printStackTrace();
             return null;
         }
+        try (BufferedReader br = new BufferedReader(new FileReader(CATEGORIES_FILE))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split("\t");
+                if (parts.length == 2) {
+                    categories.getCategoryMap().put(parts[0], parts[1]);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Ошибка при чтении файла категорий");
+            e.printStackTrace();
+        }
         return categories;
     }
 
-    public String getCategory(String title) {
+    public String getCategory(String title, ListOfCategories categories) {
         String category = categories.getCategoryMap().get(title);
         if (category == null) {
-            category = otherCategory;
+            category = OTHER_CATEGORY;
         }
         return category;
     }
 
     public void addExpense(String category, double sum, String date, ListOfCategories categories) {
-        addCurrentExpense(category, sum, this.categories.getExpenseMap(), this.categories.getYearExpenseMap());
+        addCurrentExpense(category, sum, categories.getExpenseMap(), categories.getYearExpenseMap());
 
-        addCurrentExpense(category, sum, this.categories.getMonthExpenseMap(), this.categories.getDayExpenseMap());
+        addCurrentExpense(category, sum, categories.getMonthExpenseMap(), categories.getDayExpenseMap());
 
         // Преобразование строки даты в объект LocalDate
         LocalDate expenseDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy.MM.dd"));
@@ -81,18 +80,18 @@ public class CategoryManager implements Serializable {
         // Обновление значения расходов по году
         YearMonth yearMonth = YearMonth.of(expenseDate.getYear(), expenseDate.getMonthValue());
         String yearKey = category + "-" + expenseDate.getYear();
-        double yearSum = this.categories.getYearExpenseMap().getOrDefault(yearKey, 0.0) + sum;
-        this.categories.getYearExpenseMap().put(yearKey, yearSum);
+        double yearSum = categories.getYearExpenseMap().getOrDefault(yearKey, 0.0) + sum;
+        categories.getYearExpenseMap().put(yearKey, yearSum);
 
         // Обновление значения расходов по месяцу
         String monthKey = category + "-" + yearMonth;
-        double monthSum = this.categories.getMonthExpenseMap().getOrDefault(monthKey, 0.0) + sum;
-        this.categories.getMonthExpenseMap().put(monthKey, monthSum);
+        double monthSum = categories.getMonthExpenseMap().getOrDefault(monthKey, 0.0) + sum;
+        categories.getMonthExpenseMap().put(monthKey, monthSum);
 
         // Обновление значения расходов по дню
         String dayKey = category + "-" + expenseDate;
-        double daySum = this.categories.getDayExpenseMap().getOrDefault(dayKey, 0.0) + sum;
-        this.categories.getDayExpenseMap().put(dayKey, daySum);
+        double daySum = categories.getDayExpenseMap().getOrDefault(dayKey, 0.0) + sum;
+        categories.getDayExpenseMap().put(dayKey, daySum);
     }
 
     private void addCurrentExpense(String category, double sum, Map<String, Double> expenseMap, Map<String, Double> yearExpenseMap) {
@@ -111,23 +110,23 @@ public class CategoryManager implements Serializable {
         yearExpenseMap.put(category, currentYearExpense);
     }
 
-    public String getMaxYearCategory(String date) {
+    public String getMaxYearCategory(String date, ListOfCategories categories) {
         int year = Integer.parseInt(date.split("\\.")[0]);
         return getMaxCategoryByExpenseMap(categories.getYearExpenseMap(), year);
     }
 
-    public String getMaxMonthCategory(String date) {
+    public String getMaxMonthCategory(String date, ListOfCategories categories) {
         int month = Integer.parseInt(date.split("\\.")[1]);
         return getMaxCategoryByExpenseMap(categories.getMonthExpenseMap(), month);
     }
 
-    public String getMaxDayCategory(String date) {
+    public String getMaxDayCategory(String date, ListOfCategories categories) {
         int day = Integer.parseInt(date.split("\\.")[2]);
         return getMaxCategoryByExpenseMap(categories.getDayExpenseMap(), day);
     }
 
     private String getMaxCategoryByExpenseMap(Map<String, Double> expenseMap, int filter) {
-        String maxCategory = otherCategory;
+        String maxCategory = OTHER_CATEGORY;
         double maxSum = 0.0;
 
         for (Map.Entry<String, Double> entry : expenseMap.entrySet()) {
@@ -149,8 +148,8 @@ public class CategoryManager implements Serializable {
         return maxSum + ": " + maxCategory;
     }
 
-    public String getMaxCategory() {
-        String maxCategory = otherCategory;
+    public String getMaxCategory(ListOfCategories categories) {
+        String maxCategory = OTHER_CATEGORY;
         double maxSum = 0.0;
         for (Map.Entry<String, Double> entry : categories.getExpenseMap().entrySet()) {
             if (entry.getValue() > maxSum) {
@@ -161,7 +160,7 @@ public class CategoryManager implements Serializable {
         return maxCategory;
     }
 
-    public double getMaxSum() {
+    public double getMaxSum(ListOfCategories categories) {
         double maxSum = 0.0;
         for (Double value : categories.getExpenseMap().values()) {
             if (value > maxSum) {
@@ -171,7 +170,7 @@ public class CategoryManager implements Serializable {
         return maxSum;
     }
 
-    public void clearExpenses() {
+    public void clearExpenses(ListOfCategories categories) {
         categories.getExpenseMap().clear();
     }
 }

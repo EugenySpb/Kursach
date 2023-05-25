@@ -9,8 +9,6 @@ import java.io.Serializable;
 
 public class BuyProcessor implements Serializable {
     private static final long serialVersionUID = 1L;
-    static final String CATEGORIES_FILE = "categories.tsv";
-    static final String OTHER_CATEGORY = "другое";
     static final String SUM = "sum";
     static final String CATEGORY = "category";
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -19,7 +17,7 @@ public class BuyProcessor implements Serializable {
 
     public void process(StringBuilder requestBody, PrintWriter out) throws JsonProcessingException {
         if (categoryManager == null) {
-            categoryManager = new CategoryManager(CATEGORIES_FILE, OTHER_CATEGORY);
+            categoryManager = new CategoryManager();
             categories = categoryManager.loadData();
             if (categories == null) {
                 categories = new ListOfCategories();
@@ -34,13 +32,13 @@ public class BuyProcessor implements Serializable {
         String date = buy.getDate();
         double sum = buy.getSum();
 
-        String category = categoryManager.getCategory(title);
+        String category = categoryManager.getCategory(title, categories);
         categoryManager.addExpense(category, sum, date, categories);
-        String maxCategory = categoryManager.getMaxCategory();
-        double maxSum = categoryManager.getMaxSum();
-        String maxYearCategory = categoryManager.getMaxYearCategory(date);
-        String maxMonthCategory = categoryManager.getMaxMonthCategory(date);
-        String maxDayCategory = categoryManager.getMaxDayCategory(date);
+        String maxCategory = categoryManager.getMaxCategory(categories);
+        double maxSum = categoryManager.getMaxSum(categories);
+        String maxYearCategory = categoryManager.getMaxYearCategory(date, categories);
+        String maxMonthCategory = categoryManager.getMaxMonthCategory(date, categories);
+        String maxDayCategory = categoryManager.getMaxDayCategory(date, categories);
 
 
         JsonObject result = new JsonObject();
@@ -61,7 +59,7 @@ public class BuyProcessor implements Serializable {
         maxMonthCategoryObject.addProperty(SUM, maxMonthCategory.split(": ")[0]);
         result.add("maxMonthCategory", maxMonthCategoryObject);
 
-        maxDayCategoryObject.addProperty(CATEGORY, maxDayCategory.split(":" )[1]);
+        maxDayCategoryObject.addProperty(CATEGORY, maxDayCategory.split(":")[1]);
         maxDayCategoryObject.addProperty(SUM, maxDayCategory.split(": ")[0]);
         result.add("maxDayCategory", maxDayCategoryObject);
 
