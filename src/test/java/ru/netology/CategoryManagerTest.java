@@ -1,48 +1,44 @@
 package ru.netology;
 
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.Test;
 import ru.netology.service.CategoryManager;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 
 public class CategoryManagerTest {
-    static final String date = "2022.05.10";
-    static CategoryManager categoryManager;
-    static CategoryManager mockCategoryManager;
+    static final String date = "2022.06.10";
+    private static final CategoryManager categoryManager = new CategoryManager();
 
-    @BeforeAll
-    static void setUp() {
-        categoryManager = new CategoryManager(); // Создаем настоящий экземпляр
-        // Создаем макет для заглушки
-        mockCategoryManager = mock(CategoryManager.class);
-        // Настройка поведения макета
-        when(mockCategoryManager.getCategory("булка")).thenReturn("еда");
-        when(mockCategoryManager.getMaxCategory()).thenReturn("одежда");
-        when(mockCategoryManager.getMaxSum()).thenReturn(400.0);
+    @Test
+    public void getCategory() {
+        assertEquals("еда", categoryManager.getCategory("булка"));
+        assertEquals("финансы", categoryManager.getCategory("акции"));
+        assertEquals("другое", categoryManager.getCategory("книга"));
     }
 
-    @org.junit.jupiter.api.Test
-    void getCategory() {
-        assertEquals("еда", mockCategoryManager.getCategory("булка"));
+    @Test
+    public void addExpense() {
+        categoryManager.clearExpenses();
+        categoryManager.addExpense("еда", 500.0, date);
+        categoryManager.addExpense("еда", 200.0, date);
+        assertEquals(700, categoryManager.getMaxSum());
+        assertEquals("еда", categoryManager.getMaxCategory());
     }
 
-    @org.junit.jupiter.api.Test
-    void addExpense() {
-        mockCategoryManager.addExpense("еда", 500, date);
-        assertEquals(400, mockCategoryManager.getMaxSum());
-        assertEquals("одежда", mockCategoryManager.getMaxCategory());
+    @Test
+    public void getMaxCategory() {
+        categoryManager.clearExpenses();
+        categoryManager.addExpense("еда", 500.0, date);
+        categoryManager.addExpense("еда", 200.0, date);
+        assertEquals("еда", categoryManager.getMaxCategory());
     }
 
-    @org.junit.jupiter.api.Test
-    void getMaxCategory() {
-        assertEquals("одежда", mockCategoryManager.getMaxCategory());
-    }
-
-    @org.junit.jupiter.api.Test
-    void getMaxSum() {
-        assertEquals(400, mockCategoryManager.getMaxSum());
+    @Test
+    public void getMaxSum() {
+        categoryManager.clearExpenses();
+        categoryManager.addExpense("еда", 500.0, date);
+        categoryManager.addExpense("еда", 200.0, date);
+        assertEquals(700, categoryManager.getMaxSum());
     }
 }
