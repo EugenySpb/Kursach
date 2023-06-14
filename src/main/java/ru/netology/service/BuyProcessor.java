@@ -15,7 +15,7 @@ public class BuyProcessor implements Serializable {
     private final ObjectMapper mapper = new ObjectMapper();
     protected CategoryManager categoryManager = new CategoryManager();
 
-    public void process(StringBuilder requestBody, PrintWriter out) throws JsonProcessingException {
+    public String process(StringBuilder requestBody) throws JsonProcessingException {
         System.out.println("Request received: " + requestBody);
         Buy buy = mapper.readValue(requestBody.toString(), Buy.class);
 
@@ -56,12 +56,9 @@ public class BuyProcessor implements Serializable {
 
         categoryManager.saveData();
 
-        out.println("HTTP/1.1 200 OK");
-        out.println("Content-Type: application/json");
-        out.println();
-        out.println(result);
-
         System.out.println("Response sent: " + result);
         System.out.println();
+
+        return result.toString();
     }
 }

@@ -4,44 +4,38 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class Server implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class Server {
     private static final int PORT = 8989;
     static BuyProcessor processor;
-    public void start () {
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+
+    public void start() {
+        try (ServerSocket server = new ServerSocket(PORT)) {
             System.out.println("Server running on port " + PORT);
             while (true) {
-                try (Socket clientSocket = serverSocket.accept();
-                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                     PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
-                    String request;
+                try (Socket client = server.accept();
+                     BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+                     PrintWriter out = new PrintWriter(client.getOutputStream(), true)) {
 
-                    while ((request = in.readLine()) != null) {
-                        if (request.isEmpty()) {
-                            break;
-                        }
-                    }
-                    // Читаем тело запроса
                     StringBuilder requestBody = new StringBuilder();
+
+                    // Читаем тело запроса
                     while (in.ready()) {
                         requestBody.append((char) in.read());
                     }
 
-                    if (!requestBody.toString().equals("")) {
+                    if (requestBody.length() > 0) {
                         if (processor == null) {
                             processor = new BuyProcessor();  // Создание экземпляра BuyProcessor
                         }
-                        processor.process(requestBody, out);
+                        String response = processor.process(requestBody);
+                        out.println(response);
                     }
-
                 } catch (IOException e) {
                     System.out.println("Connection processing error");
                     e.printStackTrace();
                 }
             }
-        } catch (
-                IOException e) {
+        } catch (IOException e) {
             System.out.println("Can't start server");
             e.printStackTrace();
         }
